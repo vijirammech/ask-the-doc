@@ -7,3 +7,5 @@ venv/
 chroma_db/
 .DS_Store
 .streamlit/secrets.toml
+.claude/
+*.docx
