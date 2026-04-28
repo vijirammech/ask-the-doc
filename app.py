@@ -1,11 +1,7 @@
-__import__("pysqlite3")
-import sys
-sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
-
 import streamlit as st
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
-from langchain_chroma import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -16,7 +12,7 @@ def generate_response(uploaded_file, openai_api_key, query_text):
     splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     texts = splitter.create_documents(documents)
     embeddings = OpenAIEmbeddings(api_key=openai_api_key)
-    db = Chroma.from_documents(texts, embeddings)
+    db = FAISS.from_documents(texts, embeddings)
     retriever = db.as_retriever()
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, api_key=openai_api_key)
     prompt = ChatPromptTemplate.from_messages(

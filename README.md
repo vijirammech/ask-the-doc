@@ -24,4 +24,4 @@ Open http://localhost:8501.
 
 ## How it works
 
-`app.py` splits the uploaded document into chunks, embeds them with `OpenAIEmbeddings`, indexes them in Chroma, and runs a retrieval chain (`create_retrieval_chain` + `create_stuff_documents_chain`) backed by `gpt-4o-mini` to answer the question.
+`app.py` splits the uploaded document into chunks, embeds them with `OpenAIEmbeddings`, indexes them in an in-memory FAISS vector store, and runs a retrieval chain (`create_retrieval_chain` + `create_stuff_documents_chain`) backed by `gpt-4o-mini` to answer the question.
