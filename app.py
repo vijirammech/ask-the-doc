@@ -2,18 +2,20 @@ import streamlit as st
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 
 def generate_response(uploaded_file, openai_api_key, query_text):
     documents = [uploaded_file.read().decode()]
     splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     texts = splitter.create_documents(documents)
+
     embeddings = OpenAIEmbeddings(api_key=openai_api_key)
     db = FAISS.from_documents(texts, embeddings)
     retriever = db.as_retriever()
+
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, api_key=openai_api_key)
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -21,9 +23,17 @@ def generate_response(uploaded_file, openai_api_key, query_text):
             ("human", "{input}"),
         ]
     )
-    combine = create_stuff_documents_chain(llm, prompt)
-    chain = create_retrieval_chain(retriever, combine)
-    return chain.invoke({"input": query_text})["answer"]
+
+    def format_docs(docs):
+        return "\n\n".join(d.page_content for d in docs)
+
+    chain = (
+        {"context": retriever | format_docs, "input": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+    return chain.invoke(query_text)
 
 
 st.set_page_config(page_title="🦜🔗 Ask the Doc App")
